@@ -42,8 +42,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { chats, currentChatId, createNewChat, selectChat, deleteChat } = useChatContext()
 
   const handleNewChat = () => {
-    const newChatId = createNewChat()
-    navigate(`/chat/${newChatId}`)
+    navigate("/")
   }
 
   const handleSelectChat = (chatId: string) => {

@@ -13,8 +13,8 @@ interface ChatContextType {
   currentChatId: string | null
   createNewChat: () => string
   selectChat: (chatId: string) => void
-  addMessage: (message: Message) => void
-  updateMessage: (messageId: string, content: string) => void
+  addMessage: (message: Message, chatId?: string) => void
+  updateMessage: (messageId: string, content: string, chatId?: string) => void
   deleteChat: (chatId: string) => void
 }
 
@@ -37,13 +37,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const selectChat = React.useCallback((chatId: string) => {
-    setCurrentChatId(chatId)
+    setCurrentChatId(chatId || null)
   }, [])
 
-  const addMessage = React.useCallback((message: Message) => {
+  const addMessage = React.useCallback((message: Message, chatId?: string) => {
+    const targetChatId = chatId || currentChatId
     setChats((prev) =>
       prev.map((chat) => {
-        if (chat.id === currentChatId) {
+        if (chat.id === targetChatId) {
           const updatedMessages = [...chat.messages, message]
           // Update chat title based on first user message
           const title =
@@ -57,10 +58,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     )
   }, [currentChatId])
 
-  const updateMessage = React.useCallback((messageId: string, content: string) => {
+  const updateMessage = React.useCallback((messageId: string, content: string, chatId?: string) => {
+    const targetChatId = chatId || currentChatId
     setChats((prev) =>
       prev.map((chat) => {
-        if (chat.id === currentChatId) {
+        if (chat.id === targetChatId) {
           return {
             ...chat,
             messages: chat.messages.map((msg) =>
@@ -76,22 +78,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const deleteChat = React.useCallback((chatId: string) => {
     setChats((prev) => {
       const filtered = prev.filter((chat) => chat.id !== chatId)
-      // If deleted current chat, select the first one
-      if (chatId === currentChatId && filtered.length > 0) {
-        setCurrentChatId(filtered[0].id)
-      } else if (filtered.length === 0) {
+      // If deleted current chat, navigate to home
+      if (chatId === currentChatId) {
         setCurrentChatId(null)
       }
       return filtered
     })
   }, [currentChatId])
-
-  // Create initial chat if none exists
-  React.useEffect(() => {
-    if (chats.length === 0 && currentChatId === null) {
-      createNewChat()
-    }
-  }, [chats.length, currentChatId, createNewChat])
 
   return (
     <ChatContext.Provider
