@@ -11,7 +11,6 @@ def hello(request):
 def ai(request):
     """
     Accepts a string via:
-    - GET: ?text=your_string
     - POST: JSON body {"text": "your_string"} or raw body string
     """
     if request.method == 'POST':
@@ -22,7 +21,6 @@ def ai(request):
             text = request.body.decode('utf-8')
             if not text:
                 text = request.POST.get('text', '')
-    else:
-        text = request.GET.get('text', '')
 
-    return JsonResponse({'received': text})
+        return JsonResponse({'received': text})
+    return JsonResponse({'yal': 'MONGOSE POST REQUEST'})
