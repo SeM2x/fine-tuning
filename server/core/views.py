@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django_ratelimit.decorators import ratelimit
 import json
 
 
@@ -7,7 +8,17 @@ def hello(request):
     return JsonResponse({'message': 'Hello from core API, TESTTTTTTT'})
 import requests
 
+
+def ratelimit_error(request, exception):
+    """Custom handler for rate limit exceeded."""
+    return JsonResponse(
+        {'error': 'Rate limit exceeded. Please try again later.'},
+        status=429
+    )
+
+
 @csrf_exempt
+@ratelimit(key='ip', rate='10/m', method=['GET', 'POST'], block=True)
 def ai(request):
     """
     Accepts a string via:
@@ -15,6 +26,7 @@ def ai(request):
     - POST: JSON body {"text": "your_string"} or raw body string
     
     Sends the text to Ollama and returns the AI response.
+    Rate limited to 10 requests per minute per IP.
     """
     if request.method == 'POST':
         try:
