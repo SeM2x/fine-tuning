@@ -4,7 +4,7 @@ import { ChatProvider } from '@/lib/chat-context';
 import { ThemeProvider } from '@/lib/theme-context';
 import { AuthProvider } from '@/lib/auth-context';
 import { Toaster } from '@/components/ui/sonner';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
+// import { ProtectedRoute } from '@/components/ProtectedRoute';
 import AppLayout from '@/layouts/AppLayout';
 import ChatPage from '@/pages/ChatPage';
 import LoginPage from '@/pages/LoginPage';
@@ -37,21 +37,21 @@ export function App() {
                 <Route
                   path='/'
                   element={
-                    <ProtectedRoute>
+                    // <ProtectedRoute>
                       <AppLayout>
                         <ChatPage />
                       </AppLayout>
-                    </ProtectedRoute>
+                    // </ProtectedRoute>
                   }
                 />
                 <Route
                   path='/chat/:chatId'
                   element={
-                    <ProtectedRoute>
+                    // <ProtectedRoute>
                       <AppLayout>
                         <ChatPage />
                       </AppLayout>
-                    </ProtectedRoute>
+                    // </ProtectedRoute>
                   }
                 />
 
