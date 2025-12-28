@@ -31,7 +31,7 @@ export function MessageList({ messages, streamingMessageId, isLoading }: Message
             isStreaming={message.id === streamingMessageId}
           />
         ))}
-        {isLoading && <TypingIndicator />}
+        {isLoading && !streamingMessageId && <TypingIndicator />}
         <div ref={messagesEndRef} />
       </div>
     </ScrollArea>

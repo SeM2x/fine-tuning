@@ -1,10 +1,12 @@
 import * as React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
 import { MessageList } from '@/components/chat/message-list';
 import { ChatInput } from '@/components/chat/chat-input';
 import { type Message } from '@/lib/types';
 import { EmptyScreen } from '@/components/chat/empty-screen';
 import { useChatContext } from '@/lib/chat-context';
+import { sendMessage, sendMessageStream } from '@/api/ai';
 
 export default function ChatPage() {
   const { chatId } = useParams<{ chatId: string }>();
@@ -42,6 +44,32 @@ export default function ChatPage() {
   const currentChat = chats.find((chat) => chat.id === currentChatId);
   const messages = currentChat?.messages || [];
 
+  // Mutation for sending message (non-streaming fallback)
+  const sendMessageMutation = useMutation({
+    mutationFn: (variables: { prompt: string; targetChatId: string; model?: string }) =>
+      sendMessage({ 
+        model: 'mc_bot:0.1',
+        prompt: variables.prompt,
+        stream: false
+      }),
+    onSuccess: (data, variables) => {
+      const aiMessageId = (Date.now() + 1).toString();
+      const aiResponse: Message = {
+        id: aiMessageId,
+        role: 'assistant',
+        content: data.response,
+        createdAt: new Date(),
+      };
+      addMessage(aiResponse, variables.targetChatId);
+      setIsLoading(false);
+    },
+    onError: (error) => {
+      console.error('Error sending message:', error);
+      setIsLoading(false);
+      // TODO: Show error toast/notification to user
+    },
+  });
+
   const handleSend = async (content: string) => {
     let targetChatId = currentChatId;
 
@@ -61,11 +89,10 @@ export default function ChatPage() {
     addMessage(newMessage, targetChatId);
     setIsLoading(true);
 
-    // Mock AI response with streaming
-    setTimeout(() => {
+    // Try to use streaming API first
+    try {
+      throw new Error('Force fallback'); // TEMP: Force fallback to non-streaming for now
       const aiMessageId = (Date.now() + 1).toString();
-      const fullResponse = `This is a mock streaming response from the AI. I am currently in development mode and demonstrating the streaming capability where each character appears one by one. You asked: "${content}"`;
-
       setStreamingMessageId(aiMessageId);
 
       // Add empty message first
@@ -76,24 +103,55 @@ export default function ChatPage() {
         createdAt: new Date(),
       };
       addMessage(aiResponse, targetChatId);
-      setIsLoading(false);
 
-      // Stream characters one by one
-      let currentIndex = 0;
-      const streamInterval = setInterval(() => {
-        if (currentIndex < fullResponse.length) {
-          updateMessage(
-            aiMessageId,
-            fullResponse.slice(0, currentIndex + 1),
-            targetChatId
-          );
-          currentIndex++;
-        } else {
-          clearInterval(streamInterval);
+      let accumulatedContent = '';
+
+      await sendMessageStream(
+        { 
+          model: 'mc_bot:latest',
+          prompt: content,
+          stream: true
+        },
+        (chunk) => {
+          console.log(chunk)
+          // On chunk received
+          let aiMessage = ''
+          try {
+            aiMessage = JSON.parse(chunk).response
+          } catch {
+            // If parsing fails, keep the original chunk
+            aiMessage = chunk
+          }
+          accumulatedContent += aiMessage;
+          updateMessage(aiMessageId, accumulatedContent, targetChatId);
+        },
+        () => {
+          // On complete
+          setIsLoading(false);
           setStreamingMessageId(null);
+        },
+        (error) => {
+          // On error - fall back to non-streaming
+          console.error('Streaming error, falling back to regular API:', error);
+          setStreamingMessageId(null);
+          
+          // Remove the empty streaming message
+          // Fall back to non-streaming API
+          sendMessageMutation.mutate({ 
+            prompt: content, 
+            targetChatId 
+          });
         }
-      }, 5);
-    }, 500);
+      );
+    } catch (error) {
+      // If streaming fails, use regular mutation
+      console.error('Failed to initialize stream:', error);
+      setStreamingMessageId(null);
+      sendMessageMutation.mutate({ 
+        prompt: content, 
+        targetChatId 
+      });
+    }
   };
 
   return (
