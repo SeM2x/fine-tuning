@@ -1,8 +1,7 @@
 from django.urls import path
-from .views import hello, ai
+from .views import ai, get_user_conversations
 
 urlpatterns = [
-    path('', hello, name='root'),
-    path('hello/', hello, name='hello'),
     path('ai/', ai, name='ai'),
+    path("conversations/", get_user_conversations, name="get_user_conversations"),
 ]

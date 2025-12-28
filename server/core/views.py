@@ -10,9 +10,28 @@ from .database import (
     create_conversation,
     get_conversation,
     add_message,
-    get_messages_for_context
+    get_messages_for_context,
+    get_conversations_by_user
 )
 
+@csrf_exempt
+@ratelimit(key='ip', rate=config('RATE_LIMIT', default='10/m'), method=['GET'], block=True)
+def get_user_conversations(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "GET method required"}, status=405)
+
+    user_id = request.GET.get("user_id")
+
+    if not user_id:
+        return JsonResponse({"error": "user_id is required"}, status=400)
+
+    conversations = get_conversations_by_user(user_id)
+
+    # convert ObjectId to string
+    for c in conversations:
+        c["_id"] = str(c["_id"])
+
+    return JsonResponse({"conversations": conversations}, status=200, safe=False)
 
 @csrf_exempt
 @ratelimit(key='ip', rate=config('RATE_LIMIT', default='10/m'), method=['GET', 'POST'], block=True)

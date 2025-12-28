@@ -56,8 +56,13 @@ def add_message(conv_id, role, content):
         }
     )
 
-
 def get_messages_for_context(conv_id, limit=20):
     conv = convs_col.find_one({"_id": conv_id}, {"messages": 1})
     msgs = conv.get("messages", [])
     return msgs[-limit:]
+
+def get_conversations_by_user(user_id: str):
+    return list(db.conversations.find(
+        {"user_id": user_id},
+        {"messages": 0}  # exclude messages if you only want metadata
+    ))
