@@ -121,17 +121,19 @@ export default function ChatPage() {
   };
 
   return (
-    <div className='flex h-full flex-col overflow-hidden'>
-      {messages.length === 0 ? (
-        <div className='flex flex-1 flex-col justify-center overflow-y-auto'>
-          <EmptyScreen setInput={setInput} />
-        </div>
-      ) : (
-        <MessageList
-          messages={messages}
-          isLoading={isLoading}
-        />
-      )}
+    <div className='relative flex h-full flex-col'>
+      <div className='flex-1 overflow-y-auto'>
+        {messages.length === 0 ? (
+          <div className='flex h-full flex-col items-center justify-center'>
+            <EmptyScreen setInput={setInput} />
+          </div>
+        ) : (
+          <MessageList
+            messages={messages}
+            isLoading={isLoading}
+          />
+        )}
+      </div>
       <div className='shrink-0 border-t bg-background p-4'>
         <ChatInput
           isLoading={isLoading}
