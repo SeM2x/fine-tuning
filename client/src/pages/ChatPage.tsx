@@ -21,6 +21,7 @@ export default function ChatPage() {
   } = useChatContext();
   const [isLoading, setIsLoading] = React.useState(false);
   const [input, setInput] = React.useState('');
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
   // Sync URL chatId with context
   React.useEffect(() => {
@@ -43,13 +44,20 @@ export default function ChatPage() {
 
   // Mutation for sending message
   const sendMessageMutation = useMutation({
-    mutationFn: (variables: { prompt: string; targetChatId: string; model?: string }) =>
-      sendMessage({ 
-        model: 'mc_bot:0.1',
-        prompt: variables.prompt,
-        stream: false
-      }),
+    mutationFn: (variables: { prompt: string; targetChatId: string; model?: string }) => {
+      // Create new AbortController for this request
+      abortControllerRef.current = new AbortController();
+      return sendMessage(
+        { 
+          model: 'mc_bot:0.1',
+          prompt: variables.prompt,
+          stream: false
+        },
+        abortControllerRef.current.signal
+      );
+    },
     onSuccess: (data, variables) => {
+      abortControllerRef.current = null;
       const aiMessageId = (Date.now() + 1).toString();
       const aiResponse: Message = {
         id: aiMessageId,
@@ -61,8 +69,16 @@ export default function ChatPage() {
       setIsLoading(false);
     },
     onError: (error) => {
+      abortControllerRef.current = null;
       console.error('Error sending message:', error);
       setIsLoading(false);
+      
+      // Don't show error toast if request was cancelled
+      if (error instanceof Error && error.name === 'CanceledError') {
+        toast.info('Message cancelled');
+        return;
+      }
+      
       toast.error('Failed to send message', {
         description: error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.',
       });
@@ -95,6 +111,14 @@ export default function ChatPage() {
     });
   };
 
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className='flex h-full flex-col overflow-hidden'>
       {messages.length === 0 ? (
@@ -111,6 +135,7 @@ export default function ChatPage() {
         <ChatInput
           isLoading={isLoading}
           onSend={handleSend}
+          onStop={handleStop}
           input={input}
           setInput={setInput}
         />

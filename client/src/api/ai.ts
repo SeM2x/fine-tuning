@@ -7,8 +7,11 @@ export const getAvailableModels = async (): Promise<Model[]> => {
 };
 
 export const sendMessage = async (
-  request: GenerateRequest
+  request: GenerateRequest,
+  signal?: AbortSignal
 ): Promise<GenerateResponse> => {
-  const { data } = await apiClient.post('/generate', request);
+  const { data } = await apiClient.post('/generate', request, {
+    signal,
+  });
   return data;
 };
