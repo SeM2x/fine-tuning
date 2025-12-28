@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -16,29 +16,28 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-
-const models = [
-  {
-    value: "gpt-4",
-    label: "GPT-4",
-  },
-  {
-    value: "gpt-3.5",
-    label: "GPT-3.5",
-  },
-  {
-    value: "claude-3",
-    label: "Claude 3",
-  },
-  {
-    value: "llama-3",
-    label: "Llama 3",
-  },
-]
+import { useModels } from "@/hooks/use-models"
+import { useChatContext } from "@/lib/chat-context"
 
 export function ModelSelector() {
   const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState("gpt-4")
+  const { selectedModel, setSelectedModel } = useChatContext()
+  const { data: models, isLoading, error } = useModels()
+
+  // Set default model when data loads
+  React.useEffect(() => {
+    if (models && models.length > 0 && !selectedModel) {
+      setSelectedModel(models[0].model)
+    }
+  }, [models, selectedModel, setSelectedModel])
+
+  if (error) {
+    return (
+      <Button variant="outline" disabled className="w-50 justify-between">
+        Error loading models
+      </Button>
+    )
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -48,10 +47,18 @@ export function ModelSelector() {
           role="combobox"
           aria-expanded={open}
           className="w-50 justify-between"
+          disabled={isLoading}
         >
-          {value
-            ? models.find((model) => model.value === value)?.label
-            : "Select model..."}
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 size-4 animate-spin" />
+              Loading...
+            </>
+          ) : selectedModel && models ? (
+            models.find((m) => m.model === selectedModel)?.name || "Select model..."
+          ) : (
+            "Select model..."
+          )}
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -61,22 +68,27 @@ export function ModelSelector() {
           <CommandList>
             <CommandEmpty>No model found.</CommandEmpty>
             <CommandGroup>
-              {models.map((model) => (
+              {models?.map((m) => (
                 <CommandItem
-                  key={model.value}
-                  value={model.value}
+                  key={m.model}
+                  value={m.model}
                   onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue)
+                    setSelectedModel(currentValue)
                     setOpen(false)
                   }}
                 >
                   <Check
                     className={cn(
                       "mr-2 size-4",
-                      value === model.value ? "opacity-100" : "opacity-0"
+                      selectedModel === m.model ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  {model.label}
+                  <div className="flex flex-col">
+                    <span>{m.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {m.details.parameter_size}
+                    </span>
+                  </div>
                 </CommandItem>
               ))}
             </CommandGroup>
