@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ChatProvider } from "@/lib/chat-context"
 import { ThemeProvider } from "@/lib/theme-context"
+import { Toaster } from "@/components/ui/sonner"
 import AppLayout from "@/layouts/AppLayout"
 import ChatPage from "@/pages/ChatPage"
 import NotFoundPage from "@/pages/NotFoundPage"
@@ -23,6 +24,7 @@ export function App() {
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
+          <Toaster />
           <ChatProvider>
             <AppLayout>
               <Routes>

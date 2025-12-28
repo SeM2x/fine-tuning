@@ -60,3 +60,5 @@ export function useTheme() {
   }
   return context
 }
+
+export const useThemeContext = useTheme

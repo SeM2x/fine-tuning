@@ -6,11 +6,10 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface MessageListProps {
   messages: Message[]
-  streamingMessageId?: string | null
   isLoading?: boolean
 }
 
-export function MessageList({ messages, streamingMessageId, isLoading }: MessageListProps) {
+export function MessageList({ messages, isLoading }: MessageListProps) {
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -27,11 +26,10 @@ export function MessageList({ messages, streamingMessageId, isLoading }: Message
         {messages.map((message) => (
           <MessageItem 
             key={message.id} 
-            message={message} 
-            isStreaming={message.id === streamingMessageId}
+            message={message}
           />
         ))}
-        {isLoading && !streamingMessageId && <TypingIndicator />}
+        {isLoading && <TypingIndicator />}
         <div ref={messagesEndRef} />
       </div>
     </ScrollArea>
