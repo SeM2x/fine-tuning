@@ -1,10 +1,13 @@
 import * as React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
 import { MessageList } from '@/components/chat/message-list';
 import { ChatInput } from '@/components/chat/chat-input';
 import { type Message } from '@/lib/types';
 import { EmptyScreen } from '@/components/chat/empty-screen';
 import { useChatContext } from '@/lib/chat-context';
+import { sendMessage } from '@/api/ai';
+import { toast } from 'sonner';
 
 export default function ChatPage() {
   const { chatId } = useParams<{ chatId: string }>();
@@ -12,16 +15,14 @@ export default function ChatPage() {
   const {
     chats,
     currentChatId,
+    selectedModel,
     selectChat,
     createNewChat,
     addMessage,
-    updateMessage,
   } = useChatContext();
   const [isLoading, setIsLoading] = React.useState(false);
   const [input, setInput] = React.useState('');
-  const [streamingMessageId, setStreamingMessageId] = React.useState<
-    string | null
-  >(null);
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
   // Sync URL chatId with context
   React.useEffect(() => {
@@ -42,6 +43,49 @@ export default function ChatPage() {
   const currentChat = chats.find((chat) => chat.id === currentChatId);
   const messages = currentChat?.messages || [];
 
+  // Mutation for sending message
+  const sendMessageMutation = useMutation({
+    mutationFn: (variables: { prompt: string; targetChatId: string; model?: string }) => {
+      // Create new AbortController for this request
+      abortControllerRef.current = new AbortController();
+      return sendMessage(
+        { 
+          model: selectedModel || import.meta.env.VITE_DEFAULT_MODEL || 'llama3:3b',
+          prompt: variables.prompt,
+          stream: false
+        },
+        abortControllerRef.current.signal
+      );
+    },
+    onSuccess: (data, variables) => {
+      abortControllerRef.current = null;
+      const aiMessageId = (Date.now() + 1).toString();
+      const aiResponse: Message = {
+        id: aiMessageId,
+        role: 'assistant',
+        content: data.response,
+        createdAt: new Date(),
+      };
+      addMessage(aiResponse, variables.targetChatId);
+      setIsLoading(false);
+    },
+    onError: (error) => {
+      abortControllerRef.current = null;
+      console.error('Error sending message:', error);
+      setIsLoading(false);
+      
+      // Don't show error toast if request was cancelled
+      if (error instanceof Error && error.name === 'CanceledError') {
+        toast.info('Message cancelled');
+        return;
+      }
+      
+      toast.error('Failed to send message', {
+        description: error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.',
+      });
+    },
+  });
+
   const handleSend = async (content: string) => {
     let targetChatId = currentChatId;
 
@@ -61,58 +105,40 @@ export default function ChatPage() {
     addMessage(newMessage, targetChatId);
     setIsLoading(true);
 
-    // Mock AI response with streaming
-    setTimeout(() => {
-      const aiMessageId = (Date.now() + 1).toString();
-      const fullResponse = `This is a mock streaming response from the AI. I am currently in development mode and demonstrating the streaming capability where each character appears one by one. You asked: "${content}"`;
+    // Send message to AI
+    sendMessageMutation.mutate({ 
+      prompt: content, 
+      targetChatId 
+    });
+  };
 
-      setStreamingMessageId(aiMessageId);
-
-      // Add empty message first
-      const aiResponse: Message = {
-        id: aiMessageId,
-        role: 'assistant',
-        content: '',
-        createdAt: new Date(),
-      };
-      addMessage(aiResponse, targetChatId);
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
       setIsLoading(false);
-
-      // Stream characters one by one
-      let currentIndex = 0;
-      const streamInterval = setInterval(() => {
-        if (currentIndex < fullResponse.length) {
-          updateMessage(
-            aiMessageId,
-            fullResponse.slice(0, currentIndex + 1),
-            targetChatId
-          );
-          currentIndex++;
-        } else {
-          clearInterval(streamInterval);
-          setStreamingMessageId(null);
-        }
-      }, 5);
-    }, 500);
+    }
   };
 
   return (
-    <div className='flex h-full flex-col overflow-hidden'>
-      {messages.length === 0 ? (
-        <div className='flex flex-1 flex-col justify-center overflow-y-auto'>
-          <EmptyScreen setInput={setInput} />
-        </div>
-      ) : (
-        <MessageList
-          messages={messages}
-          streamingMessageId={streamingMessageId}
-          isLoading={isLoading}
-        />
-      )}
+    <div className='relative flex h-full flex-col'>
+      <div className='flex-1 overflow-y-auto'>
+        {messages.length === 0 ? (
+          <div className='flex h-full flex-col items-center justify-center'>
+            <EmptyScreen setInput={setInput} />
+          </div>
+        ) : (
+          <MessageList
+            messages={messages}
+            isLoading={isLoading}
+          />
+        )}
+      </div>
       <div className='shrink-0 border-t bg-background p-4'>
         <ChatInput
           isLoading={isLoading}
           onSend={handleSend}
+          onStop={handleStop}
           input={input}
           setInput={setInput}
         />

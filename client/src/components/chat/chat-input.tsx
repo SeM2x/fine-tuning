@@ -18,12 +18,14 @@ export function ChatInput({ isLoading, onSend, onStop, input, setInput }: ChatIn
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      handleSend()
+      if (!isLoading) {
+        handleSend()
+      }
     }
   }
 
   const handleSend = () => {
-    if (input.trim()) {
+    if (input.trim() && !isLoading) {
       onSend(input)
       setInput("")
     }
@@ -59,6 +61,7 @@ export function ChatInput({ isLoading, onSend, onStop, input, setInput }: ChatIn
         placeholder="Type a message..."
         className="min-h-5 w-full resize-none border-0 bg-transparent p-2 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
         rows={1}
+        disabled={isLoading}
       />
 
       {isLoading ? (
@@ -77,7 +80,7 @@ export function ChatInput({ isLoading, onSend, onStop, input, setInput }: ChatIn
           size="icon"
           className="size-8 shrink-0"
           onClick={handleSend}
-          disabled={!input.trim()}
+          disabled={!input.trim() || isLoading}
         >
           <Send className="size-4" />
           <span className="sr-only">Send message</span>
