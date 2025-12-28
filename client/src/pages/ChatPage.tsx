@@ -15,6 +15,7 @@ export default function ChatPage() {
   const {
     chats,
     currentChatId,
+    selectedModel,
     selectChat,
     createNewChat,
     addMessage,
@@ -49,7 +50,7 @@ export default function ChatPage() {
       abortControllerRef.current = new AbortController();
       return sendMessage(
         { 
-          model: 'mc_bot:0.1',
+          model: selectedModel || import.meta.env.VITE_DEFAULT_MODEL || 'llama3:3b',
           prompt: variables.prompt,
           stream: false
         },

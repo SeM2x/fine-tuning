@@ -11,6 +11,8 @@ interface Chat {
 interface ChatContextType {
   chats: Chat[]
   currentChatId: string | null
+  selectedModel: string
+  setSelectedModel: (model: string) => void
   createNewChat: () => string
   selectChat: (chatId: string) => void
   addMessage: (message: Message, chatId?: string) => void
@@ -23,6 +25,17 @@ const ChatContext = React.createContext<ChatContextType | undefined>(undefined)
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [chats, setChats] = React.useState<Chat[]>([])
   const [currentChatId, setCurrentChatId] = React.useState<string | null>(null)
+  const [selectedModel, setSelectedModel] = React.useState<string>(() => {
+    // Try to load from localStorage
+    return localStorage.getItem('selectedModel') || ''
+  })
+
+  // Persist selected model to localStorage
+  React.useEffect(() => {
+    if (selectedModel) {
+      localStorage.setItem('selectedModel', selectedModel)
+    }
+  }, [selectedModel])
 
   const createNewChat = React.useCallback(() => {
     const newChat: Chat = {
@@ -91,6 +104,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       value={{
         chats,
         currentChatId,
+        selectedModel,
+        setSelectedModel,
         createNewChat,
         selectChat,
         addMessage,

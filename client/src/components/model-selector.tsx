@@ -17,18 +17,19 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { useModels } from "@/hooks/use-models"
+import { useChatContext } from "@/lib/chat-context"
 
 export function ModelSelector() {
   const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState("")
+  const { selectedModel, setSelectedModel } = useChatContext()
   const { data: models, isLoading, error } = useModels()
 
   // Set default model when data loads
   React.useEffect(() => {
-    if (models && models.length > 0 && !value) {
-      setValue(models[0].model)
+    if (models && models.length > 0 && !selectedModel) {
+      setSelectedModel(models[0].model)
     }
-  }, [models, value])
+  }, [models, selectedModel, setSelectedModel])
 
   if (error) {
     return (
@@ -53,8 +54,8 @@ export function ModelSelector() {
               <Loader2 className="mr-2 size-4 animate-spin" />
               Loading...
             </>
-          ) : value && models ? (
-            models.find((m) => m.model === value)?.name || "Select model..."
+          ) : selectedModel && models ? (
+            models.find((m) => m.model === selectedModel)?.name || "Select model..."
           ) : (
             "Select model..."
           )}
@@ -72,14 +73,14 @@ export function ModelSelector() {
                   key={m.model}
                   value={m.model}
                   onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue)
+                    setSelectedModel(currentValue)
                     setOpen(false)
                   }}
                 >
                   <Check
                     className={cn(
                       "mr-2 size-4",
-                      value === m.model ? "opacity-100" : "opacity-0"
+                      selectedModel === m.model ? "opacity-100" : "opacity-0"
                     )}
                   />
                   <div className="flex flex-col">
