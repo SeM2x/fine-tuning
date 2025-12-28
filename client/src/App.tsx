@@ -1,11 +1,11 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { ChatProvider } from "@/lib/chat-context"
-import { ThemeProvider } from "@/lib/theme-context"
-import { Toaster } from "@/components/ui/sonner"
-import AppLayout from "@/layouts/AppLayout"
-import ChatPage from "@/pages/ChatPage"
-import NotFoundPage from "@/pages/NotFoundPage"
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ChatProvider } from '@/lib/chat-context';
+import { ThemeProvider } from '@/lib/theme-context';
+import { Toaster } from '@/components/ui/sonner';
+import AppLayout from '@/layouts/AppLayout';
+import ChatPage from '@/pages/ChatPage';
+import NotFoundPage from '@/pages/NotFoundPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -17,7 +17,7 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
     },
   },
-})
+});
 
 export function App() {
   return (
@@ -26,18 +26,31 @@ export function App() {
         <ThemeProvider>
           <Toaster />
           <ChatProvider>
-            <AppLayout>
-              <Routes>
-                <Route path="/" element={<ChatPage />} />
-                <Route path="/chat/:chatId" element={<ChatPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
-            </AppLayout>
+            <Routes>
+              <Route
+                path='/'
+                element={
+                  <AppLayout>
+                    <ChatPage />
+                  </AppLayout>
+                }
+              />
+              <Route
+                path='/chat/:chatId'
+                element={
+                  <AppLayout>
+                    <ChatPage />
+                  </AppLayout>
+                }
+              />
+
+              <Route path='*' element={<NotFoundPage />} />
+            </Routes>
           </ChatProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;
