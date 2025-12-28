@@ -37,21 +37,21 @@ export function App() {
                 <Route
                   path='/'
                   element={
-                    <ProtectedRoute>
+                    // <ProtectedRoute>
                       <AppLayout>
                         <ChatPage />
                       </AppLayout>
-                    </ProtectedRoute>
+                    // </ProtectedRoute>
                   }
                 />
                 <Route
                   path='/chat/:chatId'
                   element={
-                    <ProtectedRoute>
+                    // <ProtectedRoute>
                       <AppLayout>
                         <ChatPage />
                       </AppLayout>
-                    </ProtectedRoute>
+                    // </ProtectedRoute>
                   }
                 />
 
