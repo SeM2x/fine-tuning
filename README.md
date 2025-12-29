@@ -35,7 +35,7 @@ flowchart TB
 - Rate limiting & authentication
 
 ### AI Model
-- **Base Model**: Qwen2.5-3B-Instruct-bnb-4bit (7 billion parameters)
+- **Base Model**: Qwen2.5-3B-Instruct-bnb-4bit (3 billion parameters)
 - **Fine-tuning Method**: LoRA (Low-Rank Adaptation)
 - **Training Data**: 1,000 Algerian Darija messages
 
