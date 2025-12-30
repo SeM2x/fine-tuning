@@ -1,0 +1,2 @@
+Adapters: https://drive.google.com/drive/folders/12594lHMOAb_JLI0dIXnVKat8VABGp2EK?usp=sharing
+GGUF: https://drive.google.com/drive/folders/1T5hgLUsv6zaXWjk-zTnp8xyF1bmqOHmb?usp=sharing
