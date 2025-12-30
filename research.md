@@ -45,9 +45,9 @@ We didn't use QLoRA because it reduces the quality and precision of the model.
 
 ## 3. Our Choice
 
-As mentioned before, we used LoRA because we are already planning to use a lightweight model: `Qwen2.5-7B-Instruct-bnb-4bit` (7 billion parameters).
+As mentioned before, we used LoRA because we are already planning to use a lightweight model: `Qwen2.5-3B-Instruct-bnb-4bit` (3 billion parameters).
 
-This means we don't want to risk further loss in quality of the answers by using QLoRA, and we don't have the resources to use full fine-tuning. This is why we chose a 7B parameter model.
+This means we don't want to risk further loss in quality of the answers by using QLoRA, and we don't have the resources to use full fine-tuning. This is why we chose a 3B parameter model that balances performance with efficiency.
 
 ## 4. The Training Data
 
@@ -181,6 +181,8 @@ if __name__ == "__main__":
 ## 5. Using Ollama
 
 Ollama is used to serve the fine-tuned model locally. It provides an efficient API for inference and supports quantized models for optimal performance.
+
+The complete fine-tuning pipeline, including training notebooks, model configuration, and deployment instructions, is available in the [`llm/`](llm/README.md) directory.
 
 ## 6. The Backend
 

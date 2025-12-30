@@ -36,8 +36,9 @@ flowchart TB
 
 ### AI Model
 - **Base Model**: Qwen2.5-3B-Instruct-bnb-4bit (3 billion parameters)
-- **Fine-tuning Method**: LoRA (Low-Rank Adaptation)
-- **Training Data**: 1,000 Algerian Darija messages
+- **Fine-tuning Method**: LoRA (rank=64, all linear layers)
+- **Training Data**: 7,501 examples (Darija messages + translations + synthetic)
+- **Deployment**: GGUF Q4_K_M via Ollama
 
 ## Features
 
@@ -91,26 +92,35 @@ flowchart TB
 .
 ├── client/              # React frontend application
 ├── server/              # Django backend API
+├── llm/                 # Model fine-tuning & deployment files
 ├── research.md          # Detailed fine-tuning methodology
-├── *.json              # Training and data files
+├── *.json              # Data processing files
 └── README.md           # This file
 ```
 
 ## Fine-Tuning Process
 
-The model was fine-tuned using QLoRA on a dataset of 1,000 Algerian Darija messages. The training data was collected from Hugging Face, cleaned, and translated to English to create training pairs.
+The model was fine-tuned using LoRA on a dataset of 7,501 training examples (1,000 original Darija messages + synthetic data). The training data was collected from Hugging Face, cleaned, and enhanced with translations and generated conversations.
 
-**Why QLoRA?**
+**Why LoRA?**
 - Efficient: Only trains adapter weights, not the entire model
 - Resource-friendly: Requires significantly less GPU memory
 - Maintains quality: Preserves base model capabilities while adding new skills
 
-For detailed information about the fine-tuning methodology, data preparation, and technical decisions, see [`research.md`](research.md).
+**Model Pipeline**:
+1. Base Model: Qwen2.5-3B-Instruct-bnb-4bit
+2. Fine-tuning: LoRA adapters with rank=64
+3. Conversion: GGUF Q4_K_M quantization
+4. Deployment: Ollama with custom Modelfile
+
+For technical details, training notebooks, and model files, see [`llm/README.md`](llm/README.md).
+For methodology and research decisions, see [`research.md`](research.md).
 
 ## Documentation
 
 - [Frontend Documentation](client/README.md)
 - [Backend Documentation](server/README.md)
+- [Model Fine-Tuning & Deployment](llm/README.md)
 - [Research & Methodology](research.md)
 
 ## Team
